@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"mod.go/graph/generated"
-	"mod.go/graph/model"
+	"github.com/ManuelM07/sports-complexes-api/graph/generated"
+	"github.com/ManuelM07/sports-complexes-api/graph/model"
 )
 
 // CreateTodo is the resolver for the createTodo field.

@@ -1,4 +1,4 @@
-module mod.go
+module github.com/ManuelM07/sports-complexes-api
 
 go 1.19
 

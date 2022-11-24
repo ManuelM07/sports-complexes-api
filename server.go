@@ -7,8 +7,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"mod.go/graph"
-	"mod.go/graph/generated"
+	"github.com/ManuelM07/sports-complexes-api/graph"
+	"github.com/ManuelM07/sports-complexes-api/graph/generated"
 )
 
 const defaultPort = "8080"
