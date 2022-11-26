@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  sports-complexes-api:
+    depends_on: 
+      - volume_complexes
+    build:
+      context: .
+    container_name: sports-complexes
+    hostname: rest-server
+    networks:
+      - complexesnet
+    ports:
+      - 80:8080
+    environment:
+      - PGUSER=${PGUSER:-manuel}
+      - PGPASSWORD=${PGPASSWORD?database password not set}
+      - PGHOST=${PGHOST:-db}
+      - PGPORT=${PGPORT:-26257}
+      - PGDATABASE=${PGDATABASE:-complexes_db}
+    deploy:
+      restart_policy:
+        condition: on-failure
+  roach:
+    image: cockroachdb/cockroach:latest-v20.1
+    container_name: roach
+    hostname: db
+    networks:
+      - complexesnet
+    ports:
+      - 26257:26257
+      - 8080:8080
+    volumes:
+      - volume_complexes:/cockroach/cockroach-data
+    command: start-single-node --insecure
+
+volumes:
+  volume_complexes:
+
+networks:
+  complexesnet:
+    driver: bridge
