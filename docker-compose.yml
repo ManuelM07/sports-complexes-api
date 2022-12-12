@@ -11,9 +11,9 @@ services:
     networks:
       - complexesnet
     ports:
-      - 80:8080
+      - 8081:8081
     environment:
-      - PGUSER=${PGUSER:-manuel}
+      - PGUSER=${PGUSER:-isa}
       - PGPASSWORD=${PGPASSWORD?database password not set}
       - PGHOST=${PGHOST:-db}
       - PGPORT=${PGPORT:-26257}
@@ -22,7 +22,7 @@ services:
       restart_policy:
         condition: on-failure
   roach:
-    image: cockroachdb/cockroach:latest-v20.1
+    image: cockroachdb/cockroach:latest-v22.1
     container_name: roach
     hostname: db
     networks:
@@ -32,6 +32,7 @@ services:
       - 8080:8080
     volumes:
       - volume_complexes:/cockroach/cockroach-data
+      - ./dbinit.sql:/docker-entrypoint-initdb.d/dbinit.sql
     command: start-single-node --insecure
 
 volumes:
