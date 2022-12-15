@@ -1,7 +1,6 @@
 # GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
-scalar Time
 scalar DateTime
 
 #### Inputs ####
@@ -18,10 +17,22 @@ input ComplexInput {
 }
 
 input ScheduleInput {
-  start: Time!
-  end: Time!
+  start: String!
+  end: String!
 }
 
+input ScheduleComplexInput {
+  schedule_id: Int!
+  complex_id: Int!
+  available: Boolean
+  limit_people: Int
+  count_people: Int
+}
+
+input UserComplexInput {
+  user_id: Int!
+  complex_id: Int!
+}
 
 #### Types ####
 type User {
@@ -40,23 +51,23 @@ type Complex {
 
 type Schedule {
   id: Int
-  start: Time!
-  end: Time!
+  start: String!
+  end: String!
 }
 
 type ScheduleComplex {
-  id: ID!
-  schedule_id: ID!
-  complex_id: ID!
+  id: Int
+  schedule_id: Int!
+  complex_id: Int!
   available: Boolean
   limit_people: Int
   count_people: Int
 }
 
 type UserComplex {
-  id: ID!
-  user_id: ID!
-  complex_id: ID!
+  id: Int
+  user_id: Int!
+  complex_id: Int!
 }
 
 
@@ -64,16 +75,13 @@ type Query {
   user(id:ID!): User
   complex(id:ID!): Complex
   schedule(id:ID!): Schedule
-  #users(id:ID!): [User!]
 }
 
-#input NewTodo {
-#  text: String!
-#  userId: String!
-#}
 
 type Mutation {
   createUser(input: UserInput!): User
   createComplex(input: ComplexInput!): Complex
   createSchedule(input: ScheduleInput!): Schedule
+  createScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
+  createUserComplex(input: UserComplexInput!): UserComplex
 }
