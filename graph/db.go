@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+// --------------- Querys ---------------
 func getUser(stmt string, id string) (*model.User, error) {
 	dbpool, err := connectDB()
 	if err != nil {
@@ -31,6 +32,42 @@ func getUser(stmt string, id string) (*model.User, error) {
 
 	return user, nil
 }
+
+func getComplex(stmt string, id string) (*model.Complex, error) {
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	complex := new(model.Complex)
+	err = dbpool.QueryRow(context.Background(), stmt, id).Scan(&complex.ID, &complex.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return complex, nil
+}
+
+func getSchedule(stmt string, id string) (*model.Schedule, error) {
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	schedule := new(model.Schedule)
+	err = dbpool.QueryRow(context.Background(), stmt, id).Scan(&schedule.ID, &schedule.Start, &schedule.End)
+	if err != nil {
+		return nil, err
+	}
+
+	return schedule, nil
+}
+
+
+
+// --------------- Mutations ---------------
 
 func insertUser(stmt string, input model.UserInput) (*model.User, error) {
 	dbpool, err := connectDB()
@@ -63,6 +100,56 @@ func insertComplex(stmt string, input model.ComplexInput) (*model.Complex, error
 	}
 
 	return complex, nil
+}
+
+func insertSchedule(stmt string, input model.ScheduleInput) (*model.Schedule, error) {
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	schedule := new(model.Schedule)
+	err = dbpool.QueryRow(context.Background(), stmt, input.Start, input.End).Scan(&schedule.ID, &schedule.Start, &schedule.End)
+	if err != nil {
+		return nil, err
+	}
+
+	return schedule, nil
+}
+
+func insertScheduleComplex(stmt string, input model.ScheduleComplexInput) (*model.ScheduleComplex, error) {
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	scheduleComplex := new(model.ScheduleComplex)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ScheduleID, input.ComplexID, input.Available, input.LimitPeople, 
+						input.CountPeople).Scan(&scheduleComplex.ID, &scheduleComplex.ScheduleID, &scheduleComplex.ComplexID,
+							&scheduleComplex.Available, &scheduleComplex.LimitPeople, &scheduleComplex.CountPeople)
+	if err != nil {
+		return nil, err
+	}
+
+	return scheduleComplex, nil
+}
+
+func insertUserComplex(stmt string, input model.UserComplexInput) (*model.UserComplex, error) {
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	userComplex := new(model.UserComplex)
+	err = dbpool.QueryRow(context.Background(), stmt, input.UserID, input.ComplexID).Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID)
+	if err != nil {
+		return nil, err
+	}
+
+	return userComplex, nil
 }
 
 func connectDB() (*pgxpool.Pool, error) {
