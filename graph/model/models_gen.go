@@ -2,10 +2,6 @@
 
 package model
 
-import (
-	"time"
-)
-
 type Complex struct {
 	ID   *int   `json:"id"`
 	Name string `json:"name"`
@@ -16,23 +12,31 @@ type ComplexInput struct {
 }
 
 type Schedule struct {
-	ID    *int      `json:"id"`
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
+	ID    *int   `json:"id"`
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 type ScheduleComplex struct {
-	ID          string `json:"id"`
-	ScheduleID  string `json:"schedule_id"`
-	ComplexID   string `json:"complex_id"`
-	Available   *bool  `json:"available"`
-	LimitPeople *int   `json:"limit_people"`
-	CountPeople *int   `json:"count_people"`
+	ID          *int  `json:"id"`
+	ScheduleID  int   `json:"schedule_id"`
+	ComplexID   int   `json:"complex_id"`
+	Available   *bool `json:"available"`
+	LimitPeople *int  `json:"limit_people"`
+	CountPeople *int  `json:"count_people"`
+}
+
+type ScheduleComplexInput struct {
+	ScheduleID  int   `json:"schedule_id"`
+	ComplexID   int   `json:"complex_id"`
+	Available   *bool `json:"available"`
+	LimitPeople *int  `json:"limit_people"`
+	CountPeople *int  `json:"count_people"`
 }
 
 type ScheduleInput struct {
-	Start time.Time `json:"start"`
-	End   time.Time `json:"end"`
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 type User struct {
@@ -45,9 +49,14 @@ type User struct {
 }
 
 type UserComplex struct {
-	ID        string `json:"id"`
-	UserID    string `json:"user_id"`
-	ComplexID string `json:"complex_id"`
+	ID        *int `json:"id"`
+	UserID    int  `json:"user_id"`
+	ComplexID int  `json:"complex_id"`
+}
+
+type UserComplexInput struct {
+	UserID    int `json:"user_id"`
+	ComplexID int `json:"complex_id"`
 }
 
 type UserInput struct {

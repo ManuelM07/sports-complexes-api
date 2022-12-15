@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -50,9 +49,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateComplex  func(childComplexity int, input model.ComplexInput) int
-		CreateSchedule func(childComplexity int, input model.ScheduleInput) int
-		CreateUser     func(childComplexity int, input model.UserInput) int
+		CreateComplex         func(childComplexity int, input model.ComplexInput) int
+		CreateSchedule        func(childComplexity int, input model.ScheduleInput) int
+		CreateScheduleComplex func(childComplexity int, input model.ScheduleComplexInput) int
+		CreateUser            func(childComplexity int, input model.UserInput) int
+		CreateUserComplex     func(childComplexity int, input model.UserComplexInput) int
 	}
 
 	Query struct {
@@ -96,6 +97,8 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.UserInput) (*model.User, error)
 	CreateComplex(ctx context.Context, input model.ComplexInput) (*model.Complex, error)
 	CreateSchedule(ctx context.Context, input model.ScheduleInput) (*model.Schedule, error)
+	CreateScheduleComplex(ctx context.Context, input model.ScheduleComplexInput) (*model.ScheduleComplex, error)
+	CreateUserComplex(ctx context.Context, input model.UserComplexInput) (*model.UserComplex, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id string) (*model.User, error)
@@ -156,6 +159,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateSchedule(childComplexity, args["input"].(model.ScheduleInput)), true
 
+	case "Mutation.createScheduleComplex":
+		if e.complexity.Mutation.CreateScheduleComplex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createScheduleComplex_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateScheduleComplex(childComplexity, args["input"].(model.ScheduleComplexInput)), true
+
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -167,6 +182,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.UserInput)), true
+
+	case "Mutation.createUserComplex":
+		if e.complexity.Mutation.CreateUserComplex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createUserComplex_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateUserComplex(childComplexity, args["input"].(model.UserComplexInput)), true
 
 	case "Query.complex":
 		if e.complexity.Query.Complex == nil {
@@ -339,7 +366,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{rc, e}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputComplexInput,
+		ec.unmarshalInputScheduleComplexInput,
 		ec.unmarshalInputScheduleInput,
+		ec.unmarshalInputUserComplexInput,
 		ec.unmarshalInputUserInput,
 	)
 	first := true
@@ -404,7 +433,6 @@ var sources = []*ast.Source{
 	{Name: "../schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
-scalar Time
 scalar DateTime
 
 #### Inputs ####
@@ -421,10 +449,22 @@ input ComplexInput {
 }
 
 input ScheduleInput {
-  start: Time!
-  end: Time!
+  start: String!
+  end: String!
 }
 
+input ScheduleComplexInput {
+  schedule_id: Int!
+  complex_id: Int!
+  available: Boolean
+  limit_people: Int
+  count_people: Int
+}
+
+input UserComplexInput {
+  user_id: Int!
+  complex_id: Int!
+}
 
 #### Types ####
 type User {
@@ -443,23 +483,23 @@ type Complex {
 
 type Schedule {
   id: Int
-  start: Time!
-  end: Time!
+  start: String!
+  end: String!
 }
 
 type ScheduleComplex {
-  id: ID!
-  schedule_id: ID!
-  complex_id: ID!
+  id: Int
+  schedule_id: Int!
+  complex_id: Int!
   available: Boolean
   limit_people: Int
   count_people: Int
 }
 
 type UserComplex {
-  id: ID!
-  user_id: ID!
-  complex_id: ID!
+  id: Int
+  user_id: Int!
+  complex_id: Int!
 }
 
 
@@ -467,18 +507,15 @@ type Query {
   user(id:ID!): User
   complex(id:ID!): Complex
   schedule(id:ID!): Schedule
-  #users(id:ID!): [User!]
 }
 
-#input NewTodo {
-#  text: String!
-#  userId: String!
-#}
 
 type Mutation {
   createUser(input: UserInput!): User
   createComplex(input: ComplexInput!): Complex
   createSchedule(input: ScheduleInput!): Schedule
+  createScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
+  createUserComplex(input: UserComplexInput!): UserComplex
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -502,6 +539,21 @@ func (ec *executionContext) field_Mutation_createComplex_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createScheduleComplex_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ScheduleComplexInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNScheduleComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplexInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -509,6 +561,21 @@ func (ec *executionContext) field_Mutation_createSchedule_args(ctx context.Conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNScheduleInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createUserComplex_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserComplexInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplexInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -899,6 +966,132 @@ func (ec *executionContext) fieldContext_Mutation_createSchedule(ctx context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_createScheduleComplex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createScheduleComplex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateScheduleComplex(rctx, fc.Args["input"].(model.ScheduleComplexInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ScheduleComplex)
+	fc.Result = res
+	return ec.marshalOScheduleComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplex(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createScheduleComplex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ScheduleComplex_id(ctx, field)
+			case "schedule_id":
+				return ec.fieldContext_ScheduleComplex_schedule_id(ctx, field)
+			case "complex_id":
+				return ec.fieldContext_ScheduleComplex_complex_id(ctx, field)
+			case "available":
+				return ec.fieldContext_ScheduleComplex_available(ctx, field)
+			case "limit_people":
+				return ec.fieldContext_ScheduleComplex_limit_people(ctx, field)
+			case "count_people":
+				return ec.fieldContext_ScheduleComplex_count_people(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ScheduleComplex", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createScheduleComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createUserComplex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createUserComplex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUserComplex(rctx, fc.Args["input"].(model.UserComplexInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserComplex)
+	fc.Result = res
+	return ec.marshalOUserComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplex(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createUserComplex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserComplex_id(ctx, field)
+			case "user_id":
+				return ec.fieldContext_UserComplex_user_id(ctx, field)
+			case "complex_id":
+				return ec.fieldContext_UserComplex_complex_id(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserComplex", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createUserComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_user(ctx, field)
 	if err != nil {
@@ -1279,9 +1472,9 @@ func (ec *executionContext) _Schedule_start(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Schedule_start(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1291,7 +1484,7 @@ func (ec *executionContext) fieldContext_Schedule_start(ctx context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1323,9 +1516,9 @@ func (ec *executionContext) _Schedule_end(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(time.Time)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Schedule_end(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1335,7 +1528,7 @@ func (ec *executionContext) fieldContext_Schedule_end(ctx context.Context, field
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1362,14 +1555,11 @@ func (ec *executionContext) _ScheduleComplex_id(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ScheduleComplex_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1379,7 +1569,7 @@ func (ec *executionContext) fieldContext_ScheduleComplex_id(ctx context.Context,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1411,9 +1601,9 @@ func (ec *executionContext) _ScheduleComplex_schedule_id(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ScheduleComplex_schedule_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1423,7 +1613,7 @@ func (ec *executionContext) fieldContext_ScheduleComplex_schedule_id(ctx context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1455,9 +1645,9 @@ func (ec *executionContext) _ScheduleComplex_complex_id(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_ScheduleComplex_complex_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1467,7 +1657,7 @@ func (ec *executionContext) fieldContext_ScheduleComplex_complex_id(ctx context.
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1869,14 +2059,11 @@ func (ec *executionContext) _UserComplex_id(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserComplex_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1886,7 +2073,7 @@ func (ec *executionContext) fieldContext_UserComplex_id(ctx context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1918,9 +2105,9 @@ func (ec *executionContext) _UserComplex_user_id(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserComplex_user_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1930,7 +2117,7 @@ func (ec *executionContext) fieldContext_UserComplex_user_id(ctx context.Context
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1962,9 +2149,9 @@ func (ec *executionContext) _UserComplex_complex_id(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(int)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_UserComplex_complex_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1974,7 +2161,7 @@ func (ec *executionContext) fieldContext_UserComplex_complex_id(ctx context.Cont
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3781,6 +3968,66 @@ func (ec *executionContext) unmarshalInputComplexInput(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputScheduleComplexInput(ctx context.Context, obj interface{}) (model.ScheduleComplexInput, error) {
+	var it model.ScheduleComplexInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"schedule_id", "complex_id", "available", "limit_people", "count_people"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "schedule_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("schedule_id"))
+			it.ScheduleID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "complex_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("complex_id"))
+			it.ComplexID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "available":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("available"))
+			it.Available, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "limit_people":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit_people"))
+			it.LimitPeople, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "count_people":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("count_people"))
+			it.CountPeople, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj interface{}) (model.ScheduleInput, error) {
 	var it model.ScheduleInput
 	asMap := map[string]interface{}{}
@@ -3799,7 +4046,7 @@ func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
-			it.Start, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			it.Start, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3807,7 +4054,43 @@ func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
-			it.End, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			it.End, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUserComplexInput(ctx context.Context, obj interface{}) (model.UserComplexInput, error) {
+	var it model.UserComplexInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"user_id", "complex_id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "user_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("user_id"))
+			it.UserID, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "complex_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("complex_id"))
+			it.ComplexID, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3952,6 +4235,18 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createSchedule(ctx, field)
+			})
+
+		case "createScheduleComplex":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createScheduleComplex(ctx, field)
+			})
+
+		case "createUserComplex":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createUserComplex(ctx, field)
 			})
 
 		default:
@@ -4120,9 +4415,6 @@ func (ec *executionContext) _ScheduleComplex(ctx context.Context, sel ast.Select
 
 			out.Values[i] = ec._ScheduleComplex_id(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "schedule_id":
 
 			out.Values[i] = ec._ScheduleComplex_schedule_id(ctx, field, obj)
@@ -4225,9 +4517,6 @@ func (ec *executionContext) _UserComplex(ctx context.Context, sel ast.SelectionS
 
 			out.Values[i] = ec._UserComplex_id(ctx, field, obj)
 
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "user_id":
 
 			out.Values[i] = ec._UserComplex_user_id(ctx, field, obj)
@@ -4621,6 +4910,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
+func (ec *executionContext) unmarshalNScheduleComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplexInput(ctx context.Context, v interface{}) (model.ScheduleComplexInput, error) {
+	res, err := ec.unmarshalInputScheduleComplexInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNScheduleInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleInput(ctx context.Context, v interface{}) (model.ScheduleInput, error) {
 	res, err := ec.unmarshalInputScheduleInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -4641,19 +4935,9 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
-	res, err := graphql.UnmarshalTime(v)
+func (ec *executionContext) unmarshalNUserComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplexInput(ctx context.Context, v interface{}) (model.UserComplexInput, error) {
+	res, err := ec.unmarshalInputUserComplexInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
-	res := graphql.MarshalTime(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-	}
-	return res
 }
 
 func (ec *executionContext) unmarshalNUserInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserInput(ctx context.Context, v interface{}) (model.UserInput, error) {
@@ -5002,6 +5286,13 @@ func (ec *executionContext) marshalOSchedule2ᚖgithubᚗcomᚋManuelM07ᚋsport
 	return ec._Schedule(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOScheduleComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplex(ctx context.Context, sel ast.SelectionSet, v *model.ScheduleComplex) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ScheduleComplex(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
@@ -5023,6 +5314,13 @@ func (ec *executionContext) marshalOUser2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑ
 		return graphql.Null
 	}
 	return ec._User(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOUserComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplex(ctx context.Context, sel ast.SelectionSet, v *model.UserComplex) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._UserComplex(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
