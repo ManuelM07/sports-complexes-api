@@ -33,6 +33,31 @@ func getUser(stmt string, id string) (*model.User, error) {
 	return user, nil
 }
 
+func getUsers(stmt string) ([]*model.User, error) {
+	users := make([]*model.User, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var user *model.User
+
+	rows, err := dbpool.Query(context.Background(), stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		user = new(model.User)
+		if err := rows.Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height); err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func getComplex(stmt string, id string) (*model.Complex, error) {
 	dbpool, err := connectDB()
 	if err != nil {
@@ -64,8 +89,6 @@ func getSchedule(stmt string, id string) (*model.Schedule, error) {
 
 	return schedule, nil
 }
-
-
 
 // --------------- Mutations ---------------
 
@@ -126,9 +149,9 @@ func insertScheduleComplex(stmt string, input model.ScheduleComplexInput) (*mode
 	defer dbpool.Close()
 
 	scheduleComplex := new(model.ScheduleComplex)
-	err = dbpool.QueryRow(context.Background(), stmt, input.ScheduleID, input.ComplexID, input.Available, input.LimitPeople, 
-						input.CountPeople).Scan(&scheduleComplex.ID, &scheduleComplex.ScheduleID, &scheduleComplex.ComplexID,
-							&scheduleComplex.Available, &scheduleComplex.LimitPeople, &scheduleComplex.CountPeople)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ScheduleID, input.ComplexID, input.Available, input.LimitPeople,
+		input.CountPeople).Scan(&scheduleComplex.ID, &scheduleComplex.ScheduleID, &scheduleComplex.ComplexID,
+		&scheduleComplex.Available, &scheduleComplex.LimitPeople, &scheduleComplex.CountPeople)
 	if err != nil {
 		return nil, err
 	}
