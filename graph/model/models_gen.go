@@ -12,9 +12,9 @@ type ComplexInput struct {
 }
 
 type Schedule struct {
-	ID    *int   `json:"id"`
-	Start string `json:"start"`
-	End   string `json:"end"`
+	ID    *int    `json:"id"`
+	Start *string `json:"start"`
+	End   *string `json:"end"`
 }
 
 type ScheduleComplex struct {

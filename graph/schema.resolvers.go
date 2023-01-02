@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/ManuelM07/sports-complexes-api/graph/generated"
@@ -132,12 +131,26 @@ func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
 
 // Complexs is the resolver for the complexs field.
 func (r *queryResolver) Complexs(ctx context.Context) ([]*model.Complex, error) {
-	panic(fmt.Errorf("not implemented: Complexs - complexs"))
+	s := `select * from public.complex;`
+
+	resp, err := getComplexs(s)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+	return resp, nil
 }
 
 // Schedules is the resolver for the schedules field.
 func (r *queryResolver) Schedules(ctx context.Context) ([]*model.Schedule, error) {
-	panic(fmt.Errorf("not implemented: Schedules - schedules"))
+	s := `select id, CAST(start AS string), CAST("end" AS string) from public.schedule;`
+
+	resp, err := getSchedules(s)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+	return resp, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

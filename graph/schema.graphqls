@@ -3,6 +3,8 @@
 # https://gqlgen.com/getting-started/
 scalar DateTime
 
+#enum StrNone {}
+
 #### Inputs ####
 input UserInput {
   name: String!
@@ -51,8 +53,8 @@ type Complex {
 
 type Schedule {
   id: Int
-  start: String!
-  end: String!
+  start: String
+  end: String
 }
 
 type ScheduleComplex {
