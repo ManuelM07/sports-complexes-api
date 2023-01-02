@@ -74,6 +74,31 @@ func getComplex(stmt string, id string) (*model.Complex, error) {
 	return complex, nil
 }
 
+func getComplexs(stmt string) ([]*model.Complex, error) {
+	complexs := make([]*model.Complex, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var complex *model.Complex
+
+	rows, err := dbpool.Query(context.Background(), stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		complex = new(model.Complex)
+		if err := rows.Scan(&complex.ID, &complex.Name); err != nil {
+			log.Fatal(err)
+		}
+		complexs = append(complexs, complex)
+	}
+
+	return complexs, nil
+}
+
 func getSchedule(stmt string, id string) (*model.Schedule, error) {
 	dbpool, err := connectDB()
 	if err != nil {
@@ -88,6 +113,31 @@ func getSchedule(stmt string, id string) (*model.Schedule, error) {
 	}
 
 	return schedule, nil
+}
+
+func getSchedules(stmt string) ([]*model.Schedule, error) {
+	schedules := make([]*model.Schedule, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var schedule *model.Schedule
+
+	rows, err := dbpool.Query(context.Background(), stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		schedule = new(model.Schedule)
+		if err := rows.Scan(&schedule.ID, &schedule.Start, &schedule.End); err != nil {
+			log.Fatal(err)
+		}
+		schedules = append(schedules, schedule)
+	}
+
+	return schedules, nil
 }
 
 // --------------- Mutations ---------------
