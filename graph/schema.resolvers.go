@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/ManuelM07/sports-complexes-api/graph/generated"
@@ -107,7 +108,7 @@ func (r *queryResolver) Complex(ctx context.Context, id string) (*model.Complex,
 
 // Schedule is the resolver for the schedule field.
 func (r *queryResolver) Schedule(ctx context.Context, id string) (*model.Schedule, error) {
-	s := `select * from public.schedule where public.schedule.id = $1;`
+	s := `select id, CAST(start AS string), CAST("end" AS string) from public.schedule where public.schedule.id = $1;`
 
 	resp, err := getSchedule(s, id)
 	if err != nil {
@@ -115,6 +116,28 @@ func (r *queryResolver) Schedule(ctx context.Context, id string) (*model.Schedul
 		log.Fatal(err)
 	}
 	return resp, nil
+}
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	s := `select * from public.user;`
+
+	resp, err := getUsers(s)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+	return resp, nil
+}
+
+// Complexs is the resolver for the complexs field.
+func (r *queryResolver) Complexs(ctx context.Context) ([]*model.Complex, error) {
+	panic(fmt.Errorf("not implemented: Complexs - complexs"))
+}
+
+// Schedules is the resolver for the schedules field.
+func (r *queryResolver) Schedules(ctx context.Context) ([]*model.Schedule, error) {
+	panic(fmt.Errorf("not implemented: Schedules - schedules"))
 }
 
 // Mutation returns generated.MutationResolver implementation.
