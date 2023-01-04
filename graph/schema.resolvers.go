@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/ManuelM07/sports-complexes-api/graph/generated"
@@ -172,12 +171,34 @@ func (r *queryResolver) ScheduleComplex(ctx context.Context, complexID string, a
 
 // UserComplexToUser is the resolver for the userComplexToUser field.
 func (r *queryResolver) UserComplexToUser(ctx context.Context, userID string) ([]*model.UserComplex, error) {
-	panic(fmt.Errorf("not implemented: UserComplexToUser - userComplexToUser"))
+	s := `SELECT p.id, p.user_id, p.complex_id, c.id, c.name
+	FROM public.user_complex p
+	JOIN public.complex c
+		ON p.complex_id = c.id AND p.user_id = $1;
+	`
+
+	resp, err := getUserComplexToUser(s, userID)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+	return resp, nil
 }
 
 // UserComplexToComplex is the resolver for the userComplexToComplex field.
 func (r *queryResolver) UserComplexToComplex(ctx context.Context, complexID string) ([]*model.UserComplex, error) {
-	panic(fmt.Errorf("not implemented: UserComplexToComplex - userComplexToComplex"))
+	s := `SELECT p.id, p.user_id, p.complex_id, u.id, u.name, u.years, u.birthday, u.weight, u.height
+	FROM public.user_complex p
+	JOIN public.user u
+		ON p.user_id = u.id AND p.complex_id = $1;
+	`
+
+	resp, err := getUserComplexToComplex(s, complexID)
+	if err != nil {
+
+		log.Fatal(err)
+	}
+	return resp, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
