@@ -1,5 +1,7 @@
 package graph
 
+// This file containt all querys and mutations and execute the connection to database in postgresql
+
 import (
 	"context"
 	"log"
@@ -10,7 +12,10 @@ import (
 )
 
 // --------------- Querys ---------------
-func getUser(stmt string, id string) (*model.User, error) {
+// getUser is the query to show a user
+func getUser(id string) (*model.User, error) {
+	stmt := `SELECT * FROM public.user WHERE public.user.id = $1;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -33,7 +38,10 @@ func getUser(stmt string, id string) (*model.User, error) {
 	return user, nil
 }
 
-func getUsers(stmt string) ([]*model.User, error) {
+// getUsers is the query to show a list of users
+func getUsers() ([]*model.User, error) {
+	stmt := `SELECT * FROM public.user;`
+
 	users := make([]*model.User, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -58,7 +66,10 @@ func getUsers(stmt string) ([]*model.User, error) {
 	return users, nil
 }
 
-func getComplex(stmt string, id string) (*model.Complex, error) {
+// getComplex is the query to show a complex
+func getComplex(id string) (*model.Complex, error) {
+	stmt := `SELECT * FROM public.complex WHERE public.complex.id = $1;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -74,7 +85,10 @@ func getComplex(stmt string, id string) (*model.Complex, error) {
 	return complex, nil
 }
 
-func getComplexs(stmt string) ([]*model.Complex, error) {
+// getComplexs is the query to show a list of complexes
+func getComplexs() ([]*model.Complex, error) {
+	stmt := `SELECT * FROM public.complex;`
+
 	complexs := make([]*model.Complex, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -99,7 +113,10 @@ func getComplexs(stmt string) ([]*model.Complex, error) {
 	return complexs, nil
 }
 
-func getSchedule(stmt string, id string) (*model.Schedule, error) {
+// getSchedule is the query to show a schedule
+func getSchedule(id string) (*model.Schedule, error) {
+	stmt := `SELECT id, CAST(start AS string), CAST("end" AS string) FROM public.schedule where public.schedule.id = $1;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -115,7 +132,10 @@ func getSchedule(stmt string, id string) (*model.Schedule, error) {
 	return schedule, nil
 }
 
-func getSchedules(stmt string) ([]*model.Schedule, error) {
+// getSchedules is the query to show a list of schedules
+func getSchedules() ([]*model.Schedule, error) {
+	stmt := `SELECT id, CAST(start AS string), CAST("end" AS string) FROM public.schedule;`
+
 	schedules := make([]*model.Schedule, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -140,7 +160,14 @@ func getSchedules(stmt string) ([]*model.Schedule, error) {
 	return schedules, nil
 }
 
-func getScheduleComplex(stmt string, id string, available *bool) ([]*model.ScheduleComplex, error) {
+// getScheduleComplex is the query to show a list of schedule for a complex
+func getScheduleComplex(id string, available *bool) ([]*model.ScheduleComplex, error) {
+	stmt := `SELECT p.id, p.schedule_id, p.complex_id, p.available, p.limit_people, p.count_people, 
+	s.id, CAST(s.start AS string), CAST(s."end" AS string) 
+	FROM public.schedule_complex p
+	JOIN schedule s
+		ON s.id = p.schedule_id AND p.complex_id = $1;`
+
 	scheduleComplexs := make([]*model.ScheduleComplex, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -170,7 +197,14 @@ func getScheduleComplex(stmt string, id string, available *bool) ([]*model.Sched
 	return scheduleComplexs, nil
 }
 
-func getUserComplexToUser(stmt string, id string) ([]*model.UserComplex, error) {
+// getUserComplexToUser is the query to show a list of complexes for a user
+func getUserComplexToUser(id string) ([]*model.UserComplex, error) {
+	stmt := `SELECT p.id, p.user_id, p.complex_id, c.id, c.name
+	FROM public.user_complex p
+	JOIN public.complex c
+		ON p.complex_id = c.id AND p.user_id = $1;
+	`
+
 	userComplexs := make([]*model.UserComplex, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -199,7 +233,14 @@ func getUserComplexToUser(stmt string, id string) ([]*model.UserComplex, error) 
 	return userComplexs, nil
 }
 
-func getUserComplexToComplex(stmt string, id string) ([]*model.UserComplex, error) {
+// getUserComplexToUser is the query to show a list of users for a complex
+func getUserComplexToComplex(id string) ([]*model.UserComplex, error) {
+	stmt := `SELECT p.id, p.user_id, p.complex_id, u.id, u.name, u.years, u.birthday, u.weight, u.height
+	FROM public.user_complex p
+	JOIN public.user u
+		ON p.user_id = u.id AND p.complex_id = $1;
+	`
+
 	userComplexs := make([]*model.UserComplex, 0)
 	dbpool, err := connectDB()
 	if err != nil {
@@ -229,8 +270,12 @@ func getUserComplexToComplex(stmt string, id string) ([]*model.UserComplex, erro
 }
 
 // --------------- Mutations ---------------
+// insertUser is the mutation to create a new user
+func insertUser(input model.UserInput) (*model.User, error) {
+	stmt := `INSERT INTO public.user(
+		name, years, birthday, weight, height)
+		VALUES ($1, $2, $3, $4, $5) RETURNING *;`
 
-func insertUser(stmt string, input model.UserInput) (*model.User, error) {
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -247,7 +292,11 @@ func insertUser(stmt string, input model.UserInput) (*model.User, error) {
 
 }
 
-func insertComplex(stmt string, input model.ComplexInput) (*model.Complex, error) {
+// insertComplex is the mutation to create a new complex
+func insertComplex(input model.ComplexInput) (*model.Complex, error) {
+	stmt := `INSERT INTO public.complex(name)
+		VALUES ($1) RETURNING *;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -263,7 +312,12 @@ func insertComplex(stmt string, input model.ComplexInput) (*model.Complex, error
 	return complex, nil
 }
 
-func insertSchedule(stmt string, input model.ScheduleInput) (*model.Schedule, error) {
+// insertSchedule is the mutation to create a new schedule
+func insertSchedule(input model.ScheduleInput) (*model.Schedule, error) {
+	stmt := `INSERT INTO public.schedule(
+		start, "end")
+		VALUES ($1, $2) returning id, CAST(start AS string), CAST("end" AS string);`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -279,7 +333,12 @@ func insertSchedule(stmt string, input model.ScheduleInput) (*model.Schedule, er
 	return schedule, nil
 }
 
-func insertScheduleComplex(stmt string, input model.ScheduleComplexInput) (*model.ScheduleComplex, error) {
+// insertScheduleComplex is the mutation to create a new scheduleComplex
+func insertScheduleComplex(input model.ScheduleComplexInput) (*model.ScheduleComplex, error) {
+	stmt := `INSERT INTO public.schedule_complex(
+		schedule_id, complex_id, available, limit_people, count_people)
+		VALUES ($1, $2, $3, $4, $5) RETURNING *;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -297,7 +356,12 @@ func insertScheduleComplex(stmt string, input model.ScheduleComplexInput) (*mode
 	return scheduleComplex, nil
 }
 
-func insertUserComplex(stmt string, input model.UserComplexInput) (*model.UserComplex, error) {
+// insertUserComplex is the mutation to create a new userComplex
+func insertUserComplex(input model.UserComplexInput) (*model.UserComplex, error) {
+	stmt := `INSERT INTO public.user_complex(
+		user_id, complex_id)
+		VALUES ($1, $2) RETURNING *;`
+
 	dbpool, err := connectDB()
 	if err != nil {
 		log.Fatal(err)
@@ -313,6 +377,7 @@ func insertUserComplex(stmt string, input model.UserComplexInput) (*model.UserCo
 	return userComplex, nil
 }
 
+// connection to db
 func connectDB() (*pgxpool.Pool, error) {
 	// Set connection pool configuration, with maximum connection pool size.
 	config, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
