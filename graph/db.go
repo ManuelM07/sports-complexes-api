@@ -170,6 +170,64 @@ func getScheduleComplex(stmt string, id string, available *bool) ([]*model.Sched
 	return scheduleComplexs, nil
 }
 
+func getUserComplexToUser(stmt string, id string) ([]*model.UserComplex, error) {
+	userComplexs := make([]*model.UserComplex, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var userComplex *model.UserComplex
+	var complex *model.Complex
+
+	rows, err := dbpool.Query(context.Background(), stmt, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		userComplex = new(model.UserComplex)
+		complex = new(model.Complex)
+		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID,
+			&complex.ID, &complex.Name); err != nil {
+			log.Fatal(err)
+		}
+		userComplex.Complexes = complex
+		userComplexs = append(userComplexs, userComplex)
+	}
+
+	return userComplexs, nil
+}
+
+func getUserComplexToComplex(stmt string, id string) ([]*model.UserComplex, error) {
+	userComplexs := make([]*model.UserComplex, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var userComplex *model.UserComplex
+	var user *model.User
+
+	rows, err := dbpool.Query(context.Background(), stmt, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		userComplex = new(model.UserComplex)
+		user = new(model.User)
+		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID,
+			&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height); err != nil {
+			log.Fatal(err)
+		}
+		userComplex.Users = user
+		userComplexs = append(userComplexs, userComplex)
+	}
+
+	return userComplexs, nil
+}
+
 // --------------- Mutations ---------------
 
 func insertUser(stmt string, input model.UserInput) (*model.User, error) {
