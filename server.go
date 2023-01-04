@@ -25,7 +25,7 @@ func main() {
 	http.Handle("/query", srv)
 
 	//connectDB()
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
+	log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 
 }
