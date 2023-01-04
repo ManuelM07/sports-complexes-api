@@ -140,6 +140,36 @@ func getSchedules(stmt string) ([]*model.Schedule, error) {
 	return schedules, nil
 }
 
+func getScheduleComplex(stmt string, id string, available *bool) ([]*model.ScheduleComplex, error) {
+	scheduleComplexs := make([]*model.ScheduleComplex, 0)
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+	var scheduleComplex *model.ScheduleComplex
+	var schedule *model.Schedule
+
+	rows, err := dbpool.Query(context.Background(), stmt, id)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		scheduleComplex = new(model.ScheduleComplex)
+		schedule = new(model.Schedule)
+		if err := rows.Scan(&scheduleComplex.ID, &scheduleComplex.ScheduleID, &scheduleComplex.ComplexID,
+			&scheduleComplex.Available, &scheduleComplex.LimitPeople, &scheduleComplex.CountPeople,
+			&schedule.ID, &schedule.Start, &schedule.End); err != nil {
+			log.Fatal(err)
+		}
+		scheduleComplex.Schedule = schedule
+		scheduleComplexs = append(scheduleComplexs, scheduleComplex)
+	}
+
+	return scheduleComplexs, nil
+}
+
 // --------------- Mutations ---------------
 
 func insertUser(stmt string, input model.UserInput) (*model.User, error) {
