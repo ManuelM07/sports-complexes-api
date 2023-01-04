@@ -18,12 +18,13 @@ type Schedule struct {
 }
 
 type ScheduleComplex struct {
-	ID          *int  `json:"id"`
-	ScheduleID  int   `json:"schedule_id"`
-	ComplexID   int   `json:"complex_id"`
-	Available   *bool `json:"available"`
-	LimitPeople *int  `json:"limit_people"`
-	CountPeople *int  `json:"count_people"`
+	ID          *int      `json:"id"`
+	ScheduleID  int       `json:"schedule_id"`
+	ComplexID   int       `json:"complex_id"`
+	Available   *bool     `json:"available"`
+	LimitPeople *int      `json:"limit_people"`
+	CountPeople *int      `json:"count_people"`
+	Schedule    *Schedule `json:"schedule"`
 }
 
 type ScheduleComplexInput struct {
@@ -49,9 +50,11 @@ type User struct {
 }
 
 type UserComplex struct {
-	ID        *int `json:"id"`
-	UserID    int  `json:"user_id"`
-	ComplexID int  `json:"complex_id"`
+	ID        *int     `json:"id"`
+	UserID    int      `json:"user_id"`
+	ComplexID int      `json:"complex_id"`
+	Users     *User    `json:"users"`
+	Complexes *Complex `json:"complexes"`
 }
 
 type UserComplexInput struct {

@@ -3,7 +3,6 @@
 # https://gqlgen.com/getting-started/
 scalar DateTime
 
-#enum StrNone {}
 
 #### Inputs ####
 input UserInput {
@@ -64,12 +63,15 @@ type ScheduleComplex {
   available: Boolean
   limit_people: Int
   count_people: Int
+  schedule: Schedule
 }
 
 type UserComplex {
   id: Int
   user_id: Int!
   complex_id: Int!
+  users: User
+  complexes: Complex
 }
 
 
@@ -80,6 +82,9 @@ type Query {
   users: [User]!
   complexs: [Complex]!
   schedules: [Schedule]!
+  scheduleComplex(complex_id:ID!, available:Boolean): [ScheduleComplex]!
+  userComplexToUser(user_id:ID!): [UserComplex]! # list of complexes the user belongs
+  userComplexToComplex(complex_id:ID!): [UserComplex]! # list of users the complex belongs
 }
 
 
