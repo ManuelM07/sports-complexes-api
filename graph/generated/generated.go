@@ -45,8 +45,9 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Complex struct {
-		ID   func(childComplexity int) int
-		Name func(childComplexity int) int
+		Active func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Name   func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -55,6 +56,11 @@ type ComplexityRoot struct {
 		CreateScheduleComplex func(childComplexity int, input model.ScheduleComplexInput) int
 		CreateUser            func(childComplexity int, input model.UserInput) int
 		CreateUserComplex     func(childComplexity int, input model.UserComplexInput) int
+		DeleteSchedule        func(childComplexity int, input model.ScheduleInput) int
+		UpdateComplex         func(childComplexity int, input model.ComplexInput) int
+		UpdateScheduleComplex func(childComplexity int, input model.ScheduleComplexInput) int
+		UpdateUser            func(childComplexity int, input model.UserInput) int
+		UpdateUserComplex     func(childComplexity int, input model.UserComplexInput) int
 	}
 
 	Query struct {
@@ -86,6 +92,7 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
+		Active   func(childComplexity int) int
 		Birthday func(childComplexity int) int
 		Height   func(childComplexity int) int
 		ID       func(childComplexity int) int
@@ -95,6 +102,7 @@ type ComplexityRoot struct {
 	}
 
 	UserComplex struct {
+		Active    func(childComplexity int) int
 		ComplexID func(childComplexity int) int
 		Complexes func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -109,6 +117,11 @@ type MutationResolver interface {
 	CreateSchedule(ctx context.Context, input model.ScheduleInput) (*model.Schedule, error)
 	CreateScheduleComplex(ctx context.Context, input model.ScheduleComplexInput) (*model.ScheduleComplex, error)
 	CreateUserComplex(ctx context.Context, input model.UserComplexInput) (*model.UserComplex, error)
+	UpdateUser(ctx context.Context, input model.UserInput) (*model.User, error)
+	UpdateComplex(ctx context.Context, input model.ComplexInput) (*model.Complex, error)
+	DeleteSchedule(ctx context.Context, input model.ScheduleInput) (*model.Schedule, error)
+	UpdateScheduleComplex(ctx context.Context, input model.ScheduleComplexInput) (*model.ScheduleComplex, error)
+	UpdateUserComplex(ctx context.Context, input model.UserComplexInput) (*model.UserComplex, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id string) (*model.User, error)
@@ -136,6 +149,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Complex.active":
+		if e.complexity.Complex.Active == nil {
+			break
+		}
+
+		return e.complexity.Complex.Active(childComplexity), true
 
 	case "Complex.id":
 		if e.complexity.Complex.ID == nil {
@@ -210,6 +230,66 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateUserComplex(childComplexity, args["input"].(model.UserComplexInput)), true
+
+	case "Mutation.deleteSchedule":
+		if e.complexity.Mutation.DeleteSchedule == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteSchedule_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteSchedule(childComplexity, args["input"].(model.ScheduleInput)), true
+
+	case "Mutation.updateComplex":
+		if e.complexity.Mutation.UpdateComplex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateComplex_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateComplex(childComplexity, args["input"].(model.ComplexInput)), true
+
+	case "Mutation.updateScheduleComplex":
+		if e.complexity.Mutation.UpdateScheduleComplex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateScheduleComplex_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateScheduleComplex(childComplexity, args["input"].(model.ScheduleComplexInput)), true
+
+	case "Mutation.updateUser":
+		if e.complexity.Mutation.UpdateUser == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUser_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUser(childComplexity, args["input"].(model.UserInput)), true
+
+	case "Mutation.updateUserComplex":
+		if e.complexity.Mutation.UpdateUserComplex == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserComplex_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateUserComplex(childComplexity, args["input"].(model.UserComplexInput)), true
 
 	case "Query.complex":
 		if e.complexity.Query.Complex == nil {
@@ -374,6 +454,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ScheduleComplex.ScheduleID(childComplexity), true
 
+	case "User.active":
+		if e.complexity.User.Active == nil {
+			break
+		}
+
+		return e.complexity.User.Active(childComplexity), true
+
 	case "User.birthday":
 		if e.complexity.User.Birthday == nil {
 			break
@@ -415,6 +502,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Years(childComplexity), true
+
+	case "UserComplex.active":
+		if e.complexity.UserComplex.Active == nil {
+			break
+		}
+
+		return e.complexity.UserComplex.Active(childComplexity), true
 
 	case "UserComplex.complex_id":
 		if e.complexity.UserComplex.ComplexID == nil {
@@ -537,10 +631,12 @@ input UserInput {
   birthday: DateTime
   weight: Float
   height: Int
+  active: Boolean
 }
 
 input ComplexInput {
   name: String!
+  active: Boolean
 }
 
 input ScheduleInput {
@@ -559,6 +655,7 @@ input ScheduleComplexInput {
 input UserComplexInput {
   user_id: Int!
   complex_id: Int!
+  active: Boolean
 }
 
 #### Types ####
@@ -569,11 +666,13 @@ type User {
   birthday: DateTime
   weight: Float
   height: Int
+  active: Boolean
 }
 
 type Complex {
   id: Int
   name: String!
+  active: Boolean
 }
 
 type Schedule {
@@ -596,6 +695,7 @@ type UserComplex {
   id: Int
   user_id: Int!
   complex_id: Int!
+  active: Boolean
   users: User
   complexes: Complex
 }
@@ -620,6 +720,11 @@ type Mutation {
   createSchedule(input: ScheduleInput!): Schedule
   createScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
   createUserComplex(input: UserComplexInput!): UserComplex
+  updateUser(input: UserInput!): User
+  updateComplex(input: ComplexInput!): Complex
+  deleteSchedule(input: ScheduleInput!): Schedule
+  updateScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
+  updateUserComplex(input: UserComplexInput!): UserComplex
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -689,6 +794,81 @@ func (ec *executionContext) field_Mutation_createUserComplex_args(ctx context.Co
 }
 
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteSchedule_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ScheduleInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNScheduleInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateComplex_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ComplexInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐComplexInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateScheduleComplex_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ScheduleComplexInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNScheduleComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplexInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserComplex_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UserComplexInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUserComplexInput2githubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplexInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.UserInput
@@ -940,6 +1120,47 @@ func (ec *executionContext) fieldContext_Complex_name(ctx context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Complex_active(ctx context.Context, field graphql.CollectedField, obj *model.Complex) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Complex_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Complex_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Complex",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_createUser(ctx, field)
 	if err != nil {
@@ -988,6 +1209,8 @@ func (ec *executionContext) fieldContext_Mutation_createUser(ctx context.Context
 				return ec.fieldContext_User_weight(ctx, field)
 			case "height":
 				return ec.fieldContext_User_height(ctx, field)
+			case "active":
+				return ec.fieldContext_User_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1046,6 +1269,8 @@ func (ec *executionContext) fieldContext_Mutation_createComplex(ctx context.Cont
 				return ec.fieldContext_Complex_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Complex_name(ctx, field)
+			case "active":
+				return ec.fieldContext_Complex_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Complex", field.Name)
 		},
@@ -1234,6 +1459,8 @@ func (ec *executionContext) fieldContext_Mutation_createUserComplex(ctx context.
 				return ec.fieldContext_UserComplex_user_id(ctx, field)
 			case "complex_id":
 				return ec.fieldContext_UserComplex_complex_id(ctx, field)
+			case "active":
+				return ec.fieldContext_UserComplex_active(ctx, field)
 			case "users":
 				return ec.fieldContext_UserComplex_users(ctx, field)
 			case "complexes":
@@ -1250,6 +1477,328 @@ func (ec *executionContext) fieldContext_Mutation_createUserComplex(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createUserComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUser(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUser(rctx, fc.Args["input"].(model.UserInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.User)
+	fc.Result = res
+	return ec.marshalOUser2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUser(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_User_id(ctx, field)
+			case "name":
+				return ec.fieldContext_User_name(ctx, field)
+			case "years":
+				return ec.fieldContext_User_years(ctx, field)
+			case "birthday":
+				return ec.fieldContext_User_birthday(ctx, field)
+			case "weight":
+				return ec.fieldContext_User_weight(ctx, field)
+			case "height":
+				return ec.fieldContext_User_height(ctx, field)
+			case "active":
+				return ec.fieldContext_User_active(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUser_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateComplex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateComplex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateComplex(rctx, fc.Args["input"].(model.ComplexInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Complex)
+	fc.Result = res
+	return ec.marshalOComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐComplex(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateComplex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Complex_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Complex_name(ctx, field)
+			case "active":
+				return ec.fieldContext_Complex_active(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Complex", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteSchedule(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_deleteSchedule(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSchedule(rctx, fc.Args["input"].(model.ScheduleInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Schedule)
+	fc.Result = res
+	return ec.marshalOSchedule2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐSchedule(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_deleteSchedule(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Schedule_id(ctx, field)
+			case "start":
+				return ec.fieldContext_Schedule_start(ctx, field)
+			case "end":
+				return ec.fieldContext_Schedule_end(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Schedule", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteSchedule_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateScheduleComplex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateScheduleComplex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateScheduleComplex(rctx, fc.Args["input"].(model.ScheduleComplexInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ScheduleComplex)
+	fc.Result = res
+	return ec.marshalOScheduleComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐScheduleComplex(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateScheduleComplex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_ScheduleComplex_id(ctx, field)
+			case "schedule_id":
+				return ec.fieldContext_ScheduleComplex_schedule_id(ctx, field)
+			case "complex_id":
+				return ec.fieldContext_ScheduleComplex_complex_id(ctx, field)
+			case "available":
+				return ec.fieldContext_ScheduleComplex_available(ctx, field)
+			case "limit_people":
+				return ec.fieldContext_ScheduleComplex_limit_people(ctx, field)
+			case "count_people":
+				return ec.fieldContext_ScheduleComplex_count_people(ctx, field)
+			case "schedule":
+				return ec.fieldContext_ScheduleComplex_schedule(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ScheduleComplex", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateScheduleComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateUserComplex(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateUserComplex(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateUserComplex(rctx, fc.Args["input"].(model.UserComplexInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.UserComplex)
+	fc.Result = res
+	return ec.marshalOUserComplex2ᚖgithubᚗcomᚋManuelM07ᚋsportsᚑcomplexesᚑapiᚋgraphᚋmodelᚐUserComplex(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateUserComplex(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_UserComplex_id(ctx, field)
+			case "user_id":
+				return ec.fieldContext_UserComplex_user_id(ctx, field)
+			case "complex_id":
+				return ec.fieldContext_UserComplex_complex_id(ctx, field)
+			case "active":
+				return ec.fieldContext_UserComplex_active(ctx, field)
+			case "users":
+				return ec.fieldContext_UserComplex_users(ctx, field)
+			case "complexes":
+				return ec.fieldContext_UserComplex_complexes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type UserComplex", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserComplex_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -1304,6 +1853,8 @@ func (ec *executionContext) fieldContext_Query_user(ctx context.Context, field g
 				return ec.fieldContext_User_weight(ctx, field)
 			case "height":
 				return ec.fieldContext_User_height(ctx, field)
+			case "active":
+				return ec.fieldContext_User_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1362,6 +1913,8 @@ func (ec *executionContext) fieldContext_Query_complex(ctx context.Context, fiel
 				return ec.fieldContext_Complex_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Complex_name(ctx, field)
+			case "active":
+				return ec.fieldContext_Complex_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Complex", field.Name)
 		},
@@ -1491,6 +2044,8 @@ func (ec *executionContext) fieldContext_Query_users(ctx context.Context, field 
 				return ec.fieldContext_User_weight(ctx, field)
 			case "height":
 				return ec.fieldContext_User_height(ctx, field)
+			case "active":
+				return ec.fieldContext_User_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -1541,6 +2096,8 @@ func (ec *executionContext) fieldContext_Query_complexs(ctx context.Context, fie
 				return ec.fieldContext_Complex_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Complex_name(ctx, field)
+			case "active":
+				return ec.fieldContext_Complex_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Complex", field.Name)
 		},
@@ -1716,6 +2273,8 @@ func (ec *executionContext) fieldContext_Query_userComplexToUser(ctx context.Con
 				return ec.fieldContext_UserComplex_user_id(ctx, field)
 			case "complex_id":
 				return ec.fieldContext_UserComplex_complex_id(ctx, field)
+			case "active":
+				return ec.fieldContext_UserComplex_active(ctx, field)
 			case "users":
 				return ec.fieldContext_UserComplex_users(ctx, field)
 			case "complexes":
@@ -1783,6 +2342,8 @@ func (ec *executionContext) fieldContext_Query_userComplexToComplex(ctx context.
 				return ec.fieldContext_UserComplex_user_id(ctx, field)
 			case "complex_id":
 				return ec.fieldContext_UserComplex_complex_id(ctx, field)
+			case "active":
+				return ec.fieldContext_UserComplex_active(ctx, field)
 			case "users":
 				return ec.fieldContext_UserComplex_users(ctx, field)
 			case "complexes":
@@ -2610,6 +3171,47 @@ func (ec *executionContext) fieldContext_User_height(ctx context.Context, field 
 	return fc, nil
 }
 
+func (ec *executionContext) _User_active(ctx context.Context, field graphql.CollectedField, obj *model.User) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_User_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_User_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "User",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserComplex_id(ctx context.Context, field graphql.CollectedField, obj *model.UserComplex) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserComplex_id(ctx, field)
 	if err != nil {
@@ -2739,6 +3341,47 @@ func (ec *executionContext) fieldContext_UserComplex_complex_id(ctx context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _UserComplex_active(ctx context.Context, field graphql.CollectedField, obj *model.UserComplex) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserComplex_active(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Active, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserComplex_active(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserComplex",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _UserComplex_users(ctx context.Context, field graphql.CollectedField, obj *model.UserComplex) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_UserComplex_users(ctx, field)
 	if err != nil {
@@ -2787,6 +3430,8 @@ func (ec *executionContext) fieldContext_UserComplex_users(ctx context.Context, 
 				return ec.fieldContext_User_weight(ctx, field)
 			case "height":
 				return ec.fieldContext_User_height(ctx, field)
+			case "active":
+				return ec.fieldContext_User_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type User", field.Name)
 		},
@@ -2834,6 +3479,8 @@ func (ec *executionContext) fieldContext_UserComplex_complexes(ctx context.Conte
 				return ec.fieldContext_Complex_id(ctx, field)
 			case "name":
 				return ec.fieldContext_Complex_name(ctx, field)
+			case "active":
+				return ec.fieldContext_Complex_active(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Complex", field.Name)
 		},
@@ -4621,7 +5268,7 @@ func (ec *executionContext) unmarshalInputComplexInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name"}
+	fieldsInOrder := [...]string{"name", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4633,6 +5280,14 @@ func (ec *executionContext) unmarshalInputComplexInput(ctx context.Context, obj 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4745,7 +5400,7 @@ func (ec *executionContext) unmarshalInputUserComplexInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"user_id", "complex_id"}
+	fieldsInOrder := [...]string{"user_id", "complex_id", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4768,6 +5423,14 @@ func (ec *executionContext) unmarshalInputUserComplexInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -4781,7 +5444,7 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "years", "birthday", "weight", "height"}
+	fieldsInOrder := [...]string{"name", "years", "birthday", "weight", "height", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4828,6 +5491,14 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 			if err != nil {
 				return it, err
 			}
+		case "active":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("active"))
+			it.Active, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -4863,6 +5534,10 @@ func (ec *executionContext) _Complex(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "active":
+
+			out.Values[i] = ec._Complex_active(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4921,6 +5596,36 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createUserComplex(ctx, field)
+			})
+
+		case "updateUser":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUser(ctx, field)
+			})
+
+		case "updateComplex":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateComplex(ctx, field)
+			})
+
+		case "deleteSchedule":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteSchedule(ctx, field)
+			})
+
+		case "updateScheduleComplex":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateScheduleComplex(ctx, field)
+			})
+
+		case "updateUserComplex":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserComplex(ctx, field)
 			})
 
 		default:
@@ -5302,6 +6007,10 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 
 			out.Values[i] = ec._User_height(ctx, field, obj)
 
+		case "active":
+
+			out.Values[i] = ec._User_active(ctx, field, obj)
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5341,6 +6050,10 @@ func (ec *executionContext) _UserComplex(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "active":
+
+			out.Values[i] = ec._UserComplex_active(ctx, field, obj)
+
 		case "users":
 
 			out.Values[i] = ec._UserComplex_users(ctx, field, obj)

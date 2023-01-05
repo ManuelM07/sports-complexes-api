@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/ManuelM07/sports-complexes-api/graph/generated"
@@ -59,6 +60,31 @@ func (r *mutationResolver) CreateUserComplex(ctx context.Context, input model.Us
 	}
 
 	return resp, nil
+}
+
+// UpdateUser is the resolver for the updateUser field.
+func (r *mutationResolver) UpdateUser(ctx context.Context, input model.UserInput) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: UpdateUser - updateUser"))
+}
+
+// UpdateComplex is the resolver for the updateComplex field.
+func (r *mutationResolver) UpdateComplex(ctx context.Context, input model.ComplexInput) (*model.Complex, error) {
+	panic(fmt.Errorf("not implemented: UpdateComplex - updateComplex"))
+}
+
+// DeleteSchedule is the resolver for the deleteSchedule field.
+func (r *mutationResolver) DeleteSchedule(ctx context.Context, input model.ScheduleInput) (*model.Schedule, error) {
+	panic(fmt.Errorf("not implemented: DeleteSchedule - deleteSchedule"))
+}
+
+// UpdateScheduleComplex is the resolver for the updateScheduleComplex field.
+func (r *mutationResolver) UpdateScheduleComplex(ctx context.Context, input model.ScheduleComplexInput) (*model.ScheduleComplex, error) {
+	panic(fmt.Errorf("not implemented: UpdateScheduleComplex - updateScheduleComplex"))
+}
+
+// UpdateUserComplex is the resolver for the updateUserComplex field.
+func (r *mutationResolver) UpdateUserComplex(ctx context.Context, input model.UserComplexInput) (*model.UserComplex, error) {
+	panic(fmt.Errorf("not implemented: UpdateUserComplex - updateUserComplex"))
 }
 
 // User is the resolver for the user field.

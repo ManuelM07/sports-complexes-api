@@ -11,10 +11,12 @@ input UserInput {
   birthday: DateTime
   weight: Float
   height: Int
+  active: Boolean
 }
 
 input ComplexInput {
   name: String!
+  active: Boolean
 }
 
 input ScheduleInput {
@@ -33,6 +35,7 @@ input ScheduleComplexInput {
 input UserComplexInput {
   user_id: Int!
   complex_id: Int!
+  active: Boolean
 }
 
 #### Types ####
@@ -43,11 +46,13 @@ type User {
   birthday: DateTime
   weight: Float
   height: Int
+  active: Boolean
 }
 
 type Complex {
   id: Int
   name: String!
+  active: Boolean
 }
 
 type Schedule {
@@ -70,6 +75,7 @@ type UserComplex {
   id: Int
   user_id: Int!
   complex_id: Int!
+  active: Boolean
   users: User
   complexes: Complex
 }
@@ -94,4 +100,9 @@ type Mutation {
   createSchedule(input: ScheduleInput!): Schedule
   createScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
   createUserComplex(input: UserComplexInput!): UserComplex
+  updateUser(input: UserInput!): User
+  updateComplex(input: ComplexInput!): Complex
+  deleteSchedule(input: ScheduleInput!): Schedule
+  updateScheduleComplex(input: ScheduleComplexInput!): ScheduleComplex
+  updateUserComplex(input: UserComplexInput!): UserComplex
 }

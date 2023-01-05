@@ -3,12 +3,14 @@
 package model
 
 type Complex struct {
-	ID   *int   `json:"id"`
-	Name string `json:"name"`
+	ID     *int   `json:"id"`
+	Name   string `json:"name"`
+	Active *bool  `json:"active"`
 }
 
 type ComplexInput struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Active *bool  `json:"active"`
 }
 
 type Schedule struct {
@@ -47,19 +49,22 @@ type User struct {
 	Birthday *string  `json:"birthday"`
 	Weight   *float64 `json:"weight"`
 	Height   *int     `json:"height"`
+	Active   *bool    `json:"active"`
 }
 
 type UserComplex struct {
 	ID        *int     `json:"id"`
 	UserID    int      `json:"user_id"`
 	ComplexID int      `json:"complex_id"`
+	Active    *bool    `json:"active"`
 	Users     *User    `json:"users"`
 	Complexes *Complex `json:"complexes"`
 }
 
 type UserComplexInput struct {
-	UserID    int `json:"user_id"`
-	ComplexID int `json:"complex_id"`
+	UserID    int   `json:"user_id"`
+	ComplexID int   `json:"complex_id"`
+	Active    *bool `json:"active"`
 }
 
 type UserInput struct {
@@ -68,4 +73,5 @@ type UserInput struct {
 	Birthday *string  `json:"birthday"`
 	Weight   *float64 `json:"weight"`
 	Height   *int     `json:"height"`
+	Active   *bool    `json:"active"`
 }
