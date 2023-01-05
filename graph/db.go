@@ -273,8 +273,8 @@ func getUserComplexToComplex(id string) ([]*model.UserComplex, error) {
 // insertUser is the mutation to create a new user
 func insertUser(input model.UserInput) (*model.User, error) {
 	stmt := `INSERT INTO public.user(
-		name, years, birthday, weight, height)
-		VALUES ($1, $2, $3, $4, $5) RETURNING *;`
+		name, years, birthday, weight, height, active)
+		VALUES ($1, $2, $3, $4, $5, 'true') RETURNING *;`
 
 	dbpool, err := connectDB()
 	if err != nil {
@@ -294,8 +294,8 @@ func insertUser(input model.UserInput) (*model.User, error) {
 
 // insertComplex is the mutation to create a new complex
 func insertComplex(input model.ComplexInput) (*model.Complex, error) {
-	stmt := `INSERT INTO public.complex(name)
-		VALUES ($1) RETURNING *;`
+	stmt := `INSERT INTO public.complex(name, active)
+		VALUES ($1, 'true') RETURNING *;`
 
 	dbpool, err := connectDB()
 	if err != nil {
@@ -359,8 +359,8 @@ func insertScheduleComplex(input model.ScheduleComplexInput) (*model.ScheduleCom
 // insertUserComplex is the mutation to create a new userComplex
 func insertUserComplex(input model.UserComplexInput) (*model.UserComplex, error) {
 	stmt := `INSERT INTO public.user_complex(
-		user_id, complex_id)
-		VALUES ($1, $2) RETURNING *;`
+		user_id, complex_id, active)
+		VALUES ($1, $2, 'true') RETURNING *;`
 
 	dbpool, err := connectDB()
 	if err != nil {
