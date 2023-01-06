@@ -30,7 +30,7 @@ func getUser(id string) (*model.User, error) {
 
 	for rows.Next() {
 		user = new(model.User)
-		if err := rows.Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height, &user.Active); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -57,7 +57,7 @@ func getUsers() ([]*model.User, error) {
 
 	for rows.Next() {
 		user = new(model.User)
-		if err := rows.Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height); err != nil {
+		if err := rows.Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height, &user.Active); err != nil {
 			log.Fatal(err)
 		}
 		users = append(users, user)
@@ -77,7 +77,7 @@ func getComplex(id string) (*model.Complex, error) {
 	defer dbpool.Close()
 
 	complex := new(model.Complex)
-	err = dbpool.QueryRow(context.Background(), stmt, id).Scan(&complex.ID, &complex.Name)
+	err = dbpool.QueryRow(context.Background(), stmt, id).Scan(&complex.ID, &complex.Name, &complex.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func getComplexs() ([]*model.Complex, error) {
 
 	for rows.Next() {
 		complex = new(model.Complex)
-		if err := rows.Scan(&complex.ID, &complex.Name); err != nil {
+		if err := rows.Scan(&complex.ID, &complex.Name, &complex.Active); err != nil {
 			log.Fatal(err)
 		}
 		complexs = append(complexs, complex)
@@ -222,7 +222,7 @@ func getUserComplexToUser(id string) ([]*model.UserComplex, error) {
 	for rows.Next() {
 		userComplex = new(model.UserComplex)
 		complex = new(model.Complex)
-		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID,
+		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID, &userComplex.Active,
 			&complex.ID, &complex.Name); err != nil {
 			log.Fatal(err)
 		}
@@ -258,7 +258,7 @@ func getUserComplexToComplex(id string) ([]*model.UserComplex, error) {
 	for rows.Next() {
 		userComplex = new(model.UserComplex)
 		user = new(model.User)
-		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID,
+		if err := rows.Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID, &userComplex.Active,
 			&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height); err != nil {
 			log.Fatal(err)
 		}
@@ -283,7 +283,8 @@ func insertUser(input model.UserInput) (*model.User, error) {
 	defer dbpool.Close()
 
 	user := new(model.User)
-	err = dbpool.QueryRow(context.Background(), stmt, input.Name, *input.Years, *input.Birthday, *input.Weight, *input.Height).Scan(&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height)
+	err = dbpool.QueryRow(context.Background(), stmt, input.Name, *input.Years, *input.Birthday, *input.Weight, *input.Height).Scan(
+		&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height, &user.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +305,7 @@ func insertComplex(input model.ComplexInput) (*model.Complex, error) {
 	defer dbpool.Close()
 
 	complex := new(model.Complex)
-	err = dbpool.QueryRow(context.Background(), stmt, input.Name).Scan(&complex.ID, &complex.Name)
+	err = dbpool.QueryRow(context.Background(), stmt, input.Name).Scan(&complex.ID, &complex.Name, &complex.Active)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +370,116 @@ func insertUserComplex(input model.UserComplexInput) (*model.UserComplex, error)
 	defer dbpool.Close()
 
 	userComplex := new(model.UserComplex)
-	err = dbpool.QueryRow(context.Background(), stmt, input.UserID, input.ComplexID).Scan(&userComplex.ID, &userComplex.UserID, &userComplex.ComplexID)
+	err = dbpool.QueryRow(context.Background(), stmt, input.UserID, input.ComplexID).Scan(&userComplex.ID, &userComplex.UserID,
+		&userComplex.ComplexID, &userComplex.Active)
+	if err != nil {
+		return nil, err
+	}
+
+	return userComplex, nil
+}
+
+// updateUser is the mutation to update a user
+func updateUser(input model.UserInput) (*model.User, error) {
+	stmt := `UPDATE public.user
+	SET name=$2, years=$3, birthday=$4, weight=$5, height=$6, active=$7
+	WHERE id=$1 RETURNING *;`
+
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	user := new(model.User)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ID, input.Name, *input.Years, *input.Birthday, *input.Weight, *input.Height, *input.Active).Scan(
+		&user.ID, &user.Name, &user.Years, &user.Birthday, &user.Weight, &user.Height, &user.Active)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// updateComplex is the mutation to update a complex
+func updateComplex(input model.ComplexInput) (*model.Complex, error) {
+	stmt := `UPDATE public.complex
+			SET name=$2, active=$3
+			WHERE id=$1 RETURNING *;`
+
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	complex := new(model.Complex)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ID, input.Name, input.Active).Scan(&complex.ID, &complex.Name, &complex.Active)
+	if err != nil {
+		return nil, err
+	}
+
+	return complex, nil
+}
+
+// deleteSchedule is the mutation to delete a schedule
+func deleteSchedule(input model.ScheduleInput) (*model.Schedule, error) {
+	stmt := `DELETE FROM public.schedule WHERE id=$1 
+	RETURNING id, CAST(start AS string), CAST("end" AS string);`
+
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	schedule := new(model.Schedule)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ID).Scan(&schedule.ID, &schedule.Start, &schedule.End)
+	if err != nil {
+		return nil, err
+	}
+
+	return schedule, nil
+}
+
+// updateScheduleComplex is the mutation to update a scheduleComplex
+func updateScheduleComplex(input model.ScheduleComplexInput) (*model.ScheduleComplex, error) {
+	stmt := `UPDATE public.schedule_complex
+	SET schedule_id=$2, complex_id=$3, available=$4, limit_people=$5, count_people=$6
+	WHERE id=$1 RETURNING *;`
+
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	scheduleComplex := new(model.ScheduleComplex)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ID, input.ScheduleID, input.ComplexID, input.Available, input.LimitPeople,
+		input.CountPeople).Scan(&scheduleComplex.ID, &scheduleComplex.ScheduleID, &scheduleComplex.ComplexID,
+		&scheduleComplex.Available, &scheduleComplex.LimitPeople, &scheduleComplex.CountPeople)
+	if err != nil {
+		return nil, err
+	}
+
+	return scheduleComplex, nil
+}
+
+// updateUserComplex is the mutation to update a userComplex
+func updateUserComplex(input model.UserComplexInput) (*model.UserComplex, error) {
+	stmt := `UPDATE public.user_complex
+	SET user_id=$2, complex_id=$3, active=$4
+	WHERE id=$1 RETURNING *;`
+
+	dbpool, err := connectDB()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer dbpool.Close()
+
+	userComplex := new(model.UserComplex)
+	err = dbpool.QueryRow(context.Background(), stmt, input.ID, input.UserID, input.ComplexID).Scan(&userComplex.ID, &userComplex.UserID,
+		&userComplex.ComplexID, &userComplex.Active)
 	if err != nil {
 		return nil, err
 	}
