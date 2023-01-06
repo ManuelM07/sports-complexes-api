@@ -13,7 +13,7 @@ services:
     ports:
       - 8081:8081
     environment:
-      - PGUSER=${PGUSER:-isa}
+      - PGUSER=${PGUSER:-admin}
       - PGPASSWORD=${PGPASSWORD?database password not set}
       - PGHOST=${PGHOST:-db}
       - PGPORT=${PGPORT:-26257}
