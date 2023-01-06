@@ -9,6 +9,7 @@ type Complex struct {
 }
 
 type ComplexInput struct {
+	ID     *int   `json:"id"`
 	Name   string `json:"name"`
 	Active *bool  `json:"active"`
 }
@@ -30,6 +31,7 @@ type ScheduleComplex struct {
 }
 
 type ScheduleComplexInput struct {
+	ID          *int  `json:"id"`
 	ScheduleID  int   `json:"schedule_id"`
 	ComplexID   int   `json:"complex_id"`
 	Available   *bool `json:"available"`
@@ -38,8 +40,9 @@ type ScheduleComplexInput struct {
 }
 
 type ScheduleInput struct {
-	Start string `json:"start"`
-	End   string `json:"end"`
+	ID    *int    `json:"id"`
+	Start *string `json:"start"`
+	End   *string `json:"end"`
 }
 
 type User struct {
@@ -62,12 +65,14 @@ type UserComplex struct {
 }
 
 type UserComplexInput struct {
+	ID        *int  `json:"id"`
 	UserID    int   `json:"user_id"`
 	ComplexID int   `json:"complex_id"`
 	Active    *bool `json:"active"`
 }
 
 type UserInput struct {
+	ID       *int     `json:"id"`
 	Name     string   `json:"name"`
 	Years    *int     `json:"years"`
 	Birthday *string  `json:"birthday"`

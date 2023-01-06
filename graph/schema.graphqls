@@ -6,6 +6,7 @@ scalar DateTime
 
 #### Inputs ####
 input UserInput {
+  id: Int
   name: String!
   years: Int
   birthday: DateTime
@@ -15,16 +16,19 @@ input UserInput {
 }
 
 input ComplexInput {
+  id: Int
   name: String!
   active: Boolean
 }
 
 input ScheduleInput {
-  start: String!
-  end: String!
+  id: Int
+  start: String
+  end: String
 }
 
 input ScheduleComplexInput {
+  id: Int
   schedule_id: Int!
   complex_id: Int!
   available: Boolean
@@ -33,6 +37,7 @@ input ScheduleComplexInput {
 }
 
 input UserComplexInput {
+  id: Int
   user_id: Int!
   complex_id: Int!
   active: Boolean
@@ -79,7 +84,6 @@ type UserComplex {
   users: User
   complexes: Complex
 }
-
 
 type Query {
   user(id:ID!): User

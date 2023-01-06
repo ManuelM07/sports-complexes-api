@@ -626,6 +626,7 @@ scalar DateTime
 
 #### Inputs ####
 input UserInput {
+  id: Int
   name: String!
   years: Int
   birthday: DateTime
@@ -635,16 +636,19 @@ input UserInput {
 }
 
 input ComplexInput {
+  id: Int
   name: String!
   active: Boolean
 }
 
 input ScheduleInput {
-  start: String!
-  end: String!
+  id: Int
+  start: String
+  end: String
 }
 
 input ScheduleComplexInput {
+  id: Int
   schedule_id: Int!
   complex_id: Int!
   available: Boolean
@@ -653,6 +657,7 @@ input ScheduleComplexInput {
 }
 
 input UserComplexInput {
+  id: Int
   user_id: Int!
   complex_id: Int!
   active: Boolean
@@ -699,7 +704,6 @@ type UserComplex {
   users: User
   complexes: Complex
 }
-
 
 type Query {
   user(id:ID!): User
@@ -5268,13 +5272,21 @@ func (ec *executionContext) unmarshalInputComplexInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "active"}
+	fieldsInOrder := [...]string{"id", "name", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -5304,13 +5316,21 @@ func (ec *executionContext) unmarshalInputScheduleComplexInput(ctx context.Conte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"schedule_id", "complex_id", "available", "limit_people", "count_people"}
+	fieldsInOrder := [...]string{"id", "schedule_id", "complex_id", "available", "limit_people", "count_people"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "schedule_id":
 			var err error
 
@@ -5364,18 +5384,26 @@ func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"start", "end"}
+	fieldsInOrder := [...]string{"id", "start", "end"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "start":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("start"))
-			it.Start, err = ec.unmarshalNString2string(ctx, v)
+			it.Start, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5383,7 +5411,7 @@ func (ec *executionContext) unmarshalInputScheduleInput(ctx context.Context, obj
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("end"))
-			it.End, err = ec.unmarshalNString2string(ctx, v)
+			it.End, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5400,13 +5428,21 @@ func (ec *executionContext) unmarshalInputUserComplexInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"user_id", "complex_id", "active"}
+	fieldsInOrder := [...]string{"id", "user_id", "complex_id", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "user_id":
 			var err error
 
@@ -5444,13 +5480,21 @@ func (ec *executionContext) unmarshalInputUserInput(ctx context.Context, obj int
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "years", "birthday", "weight", "height", "active"}
+	fieldsInOrder := [...]string{"id", "name", "years", "birthday", "weight", "height", "active"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
